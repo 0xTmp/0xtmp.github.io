@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Existence Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #results p {
+            padding: 5px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Email Existence Checker</h1>
+    <form id="emailForm">
+        <textarea id="emails" rows="10" cols="30" placeholder="Enter one email per line"></textarea>
+        <br>
+        <button type="button" onclick="checkEmails()">Check Emails</button>
+    </form>
+    <div id="results"></div>
+
+    <script>
+        function checkEmails() {
+            const emails = document.getElementById('emails').value.split('\n').map(email => email.trim());
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = ''; // Clear previous results
+
+            emails.forEach(email => {
+                if (email) { // Skip empty lines
+                    const url = `https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`;
+
+                    fetch(url)
+                        .then(response => {
+                            if (response.status === 200) {
+                                return response.json();
+                            } else {
+                                throw new Error(`Failed to fetch for ${email}`);
+                            }
+                        })
+                        .then(data => {
+                            if (data && data.NameSpaceType === 'Managed') {
+                                resultsDiv.innerHTML += `<p>${email}: <span style="color: green;">Exists</span></p>`;
+                            } else {
+                                resultsDiv.innerHTML += `<p>${email}: <span style="color: red;">Does not exist</span></p>`;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            resultsDiv.innerHTML += `<p>${email}: <span style="color: orange;">Error checking email</span></p>`;
+                        });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
