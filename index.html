@@ -32,7 +32,6 @@
                     
                     xhr.open('GET', url, true);
                     xhr.onreadystatechange = function() {
-                        if (xhr.readyState == 4) {
                             if (xhr.status == 200) {
                                 try {
                                     const response = JSON.parse(xhr.responseText);
@@ -51,7 +50,6 @@
                                 errorResult.textContent = `Email: ${email}, HTTP Error: ${xhr.status}`;
                                 resultsDiv.appendChild(errorResult);
                             }
-                        }
                     };
                     xhr.send();
                 }
