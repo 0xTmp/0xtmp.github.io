@@ -29,10 +29,6 @@
         button:hover {
             background-color: #0056b3;
         }
-        #results p {
-            padding: 5px;
-            margin: 5px 0;
-        }
     </style>
 </head>
 <body>
@@ -42,33 +38,29 @@
         <br>
         <button type="button" onclick="checkEmails()">Check Emails</button>
     </form>
-    <div id="results"></div>
 
     <script>
+        function checkEmail(email) {
+            fetch(`https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (parseInt(data.State) === 4) {
+                        console.log(`[\x1b[93m+\x1b[0m] Existing Account: ${email}`);
+                    } else {
+                        console.log(`[-] No Account Found: ${email}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
         function checkEmails() {
             const emails = document.getElementById('emails').value.split('\n').map(email => email.trim());
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = ''; // Clear previous results
 
             emails.forEach(email => {
                 if (email) { // Skip empty lines
-                    const url = `https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`;
-
-                    fetch(url)
-                        .then(response => response.json())
-                        .then(data => {
-                            console.log(data); // Print the JSON response to the console
-
-                            if (data.State === 4) {
-                                resultsDiv.innerHTML += `<p>${email}: <span style="color: green;">Exists</span></p>`;
-                            } else {
-                                resultsDiv.innerHTML += `<p>${email}: <span style="color: red;">Does not exist</span></p>`;
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            resultsDiv.innerHTML += `<p>${email}: <span style="color: orange;">Error checking email</span></p>`;
-                        });
+                    checkEmail(email);
                 }
             });
         }
