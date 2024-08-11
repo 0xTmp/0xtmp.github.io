@@ -55,7 +55,7 @@
                 if (xhr.status === 200) {
                     const data = JSON.parse(xhr.responseText);
                     const resultsDiv = document.getElementById('results');
-
+                    resultsDiv.innerHTML += `<p>${data}: <span style="color: green;">Exists</span></p>`;
                     if (parseInt(data.State) === 4) {
                         resultsDiv.innerHTML += `<p>${email}: <span style="color: green;">Exists</span></p>`;
                     } else {
