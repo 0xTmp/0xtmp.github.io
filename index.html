@@ -3,42 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verification</title>
+    <title>Email List State Checker</title>
 </head>
 <body>
-    <h1>Email Verification Tool</h1>
-    <textarea id="emailList" rows="10" cols="50" placeholder="Enter emails, one per line..."></textarea>
-    <br><br>
-    <button id="verifyBtn">Verify Emails</button>
-    <br><br>
+    <h1>Email List State Checker</h1>
+
+    <form id="emailForm">
+        <label for="emails">Enter email addresses (one per line):</label><br>
+        <textarea id="emails" rows="10" cols="30"></textarea><br>
+        <button type="submit">Check States</button>
+    </form>
+
+    <h2>Results:</h2>
     <div id="results"></div>
 
     <script>
-        document.getElementById('verifyBtn').addEventListener('click', function() {
-            const emails = document.getElementById('emailList').value.split('\n');
+        document.getElementById('emailForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const emails = document.getElementById('emails').value.split('\n');
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = ''; // Clear previous results
 
             emails.forEach(email => {
                 email = email.trim();
                 if (email) {
-                    const url = `https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`;
-
                     const xhr = new XMLHttpRequest();
+                    const url = `https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`;
+                    
                     xhr.open('GET', url, true);
                     xhr.onreadystatechange = function() {
-                        if (xhr.readyState === 4) { // Request is done
+                        if (xhr.readyState == 4 && xhr.status == 200) {
+                            const response = JSON.parse(xhr.responseText);
+                            const state = response.State;
                             const result = document.createElement('p');
-                            if (xhr.status === 200) { // Success
-                                const data = JSON.parse(xhr.responseText);
-                                if (data.State === 4) {
-                                    result.textContent = `Email: ${email} - Exists`;
-                                } else {
-                                    result.textContent = `Email: ${email} - Does not exist`;
-                                }
-                            } else { // Error
-                                result.textContent = `Email: ${email} - Error: ${xhr.statusText}`;
-                            }
+                            result.textContent = `Email: ${email}, State: ${state}`;
                             resultsDiv.appendChild(result);
                         }
                     };
