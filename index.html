@@ -3,43 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email List Checker</title>
-    <script>
-        function checkEmails() {
-            const emailInput = document.getElementById('emails').value;
-            const emailList = emailInput.split(',').map(email => email.trim());
-            const responseDisplay = document.getElementById('responseDisplay');
-
-            responseDisplay.textContent = "Processing...\n";
-
-            emailList.forEach(email => {
-                const xhr = new XMLHttpRequest();
-                const url = `https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`;
-
-                xhr.open('GET', url, true);
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status === 200) {
-                            const data = JSON.parse(xhr.responseText);
-                            responseDisplay.textContent += `Email: ${email}\nResponse: ${JSON.stringify(data, null, 2)}\n\n`;
-                        } else {
-                            responseDisplay.textContent += `Email: ${email}\nError: ${xhr.statusText}\n\n`;
-                        }
-                    }
-                };
-                xhr.send();
-            });
-        }
-    </script>
+    <title>Email Verification</title>
 </head>
 <body>
-    <h1>Email List Checker</h1>
-    <form id="emailForm" onsubmit="event.preventDefault(); checkEmails();">
-        <label for="emails">Enter Email Addresses (comma separated):</label><br><br>
-        <textarea id="emails" name="emails" rows="4" cols="50"></textarea><br><br>
-        <input type="submit" value="Check Emails">
-    </form>
-    <h2>Response:</h2>
-    <pre id="responseDisplay"></pre>
+    <h1>Email Verification Tool</h1>
+    <textarea id="emailList" rows="10" cols="50" placeholder="Enter emails, one per line..."></textarea>
+    <br><br>
+    <button id="verifyBtn">Verify Emails</button>
+    <br><br>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('verifyBtn').addEventListener('click', function() {
+            const emails = document.getElementById('emailList').value.split('\n');
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = ''; // Clear previous results
+
+            emails.forEach(email => {
+                email = email.trim();
+                if (email) {
+                    const url = `https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`;
+
+                    fetch(url)
+                        .then(response => response.json())
+                        .then(data => {
+                            const result = document.createElement('p');
+                            if (data.State === 4) {
+                                result.textContent = `Email: ${email} - Exists`;
+                            } else {
+                                result.textContent = `Email: ${email} - Does not exist`;
+                            }
+                            resultsDiv.appendChild(result);
+                        })
+                        .catch(error => {
+                            const result = document.createElement('p');
+                            result.textContent = `Email: ${email} - Error: ${error.message}`;
+                            resultsDiv.appendChild(result);
+                        });
+                }
+            });
+        });
+    </script>
 </body>
 </html>
