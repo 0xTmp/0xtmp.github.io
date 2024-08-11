@@ -5,23 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email List Checker</title>
     <script>
-        async function checkEmails() {
+        function checkEmails() {
             const emailInput = document.getElementById('emails').value;
             const emailList = emailInput.split(',').map(email => email.trim());
             const responseDisplay = document.getElementById('responseDisplay');
 
             responseDisplay.textContent = "Processing...\n";
 
-            for (const email of emailList) {
-                try {
-                    const response = await fetch(`https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`);
-                    const data = await response.json();
+            emailList.forEach(email => {
+                const xhr = new XMLHttpRequest();
+                const url = `https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`;
 
-                    responseDisplay.textContent += `Email: ${email}\nResponse: ${JSON.stringify(data, null, 2)}\n\n`;
-                } catch (error) {
-                    responseDisplay.textContent += `Email: ${email}\nError: ${error}\n\n`;
-                }
-            }
+                xhr.open('GET', url, true);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            const data = JSON.parse(xhr.responseText);
+                            responseDisplay.textContent += `Email: ${email}\nResponse: ${JSON.stringify(data, null, 2)}\n\n`;
+                        } else {
+                            responseDisplay.textContent += `Email: ${email}\nError: ${xhr.statusText}\n\n`;
+                        }
+                    }
+                };
+                xhr.send();
+            });
         }
     </script>
 </head>
