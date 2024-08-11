@@ -41,18 +41,31 @@
 
     <script>
         function checkEmail(email) {
-            fetch(`https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`)
-                .then(response => response.json())
-                .then(data => {
+            const xhr = new XMLHttpRequest();
+            const url = `https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`;
+
+            xhr.open('GET', url, true);
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    const data = JSON.parse(xhr.responseText);
+                    console.log(data); // Print the JSON response to the console
+
                     if (parseInt(data.State) === 4) {
                         console.log(`[\x1b[93m+\x1b[0m] Existing Account: ${email}`);
                     } else {
                         console.log(`[-] No Account Found: ${email}`);
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+                } else {
+                    console.error(`Error fetching data for ${email}: ${xhr.status}`);
+                }
+            };
+
+            xhr.onerror = function() {
+                console.error(`Request error for ${email}`);
+            };
+
+            xhr.send();
         }
 
         function checkEmails() {
