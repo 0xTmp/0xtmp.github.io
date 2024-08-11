@@ -28,7 +28,7 @@
                 email = email.trim();
                 if (email) {
                     const xhr = new XMLHttpRequest();
-                    const url = `https://corsproxy.io/https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`;
+                    const url = `https://corsproxy.io/?https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`;
                     
                     xhr.open('GET', url, true);
                     xhr.onreadystatechange = function() {
