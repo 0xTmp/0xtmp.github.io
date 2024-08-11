@@ -24,22 +24,25 @@
                 if (email) {
                     const url = `https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`;
 
-                    fetch(url)
-                        .then(response => response.json())
-                        .then(data => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('GET', url, true);
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState === 4) { // Request is done
                             const result = document.createElement('p');
-                            if (data.State === 4) {
-                                result.textContent = `Email: ${email} - Exists`;
-                            } else {
-                                result.textContent = `Email: ${email} - Does not exist`;
+                            if (xhr.status === 200) { // Success
+                                const data = JSON.parse(xhr.responseText);
+                                if (data.State === 4) {
+                                    result.textContent = `Email: ${email} - Exists`;
+                                } else {
+                                    result.textContent = `Email: ${email} - Does not exist`;
+                                }
+                            } else { // Error
+                                result.textContent = `Email: ${email} - Error: ${xhr.statusText}`;
                             }
                             resultsDiv.appendChild(result);
-                        })
-                        .catch(error => {
-                            const result = document.createElement('p');
-                            result.textContent = `Email: ${email} - Error: ${error.message}`;
-                            resultsDiv.appendChild(result);
-                        });
+                        }
+                    };
+                    xhr.send();
                 }
             });
         });
