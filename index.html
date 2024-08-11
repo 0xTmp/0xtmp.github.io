@@ -32,12 +32,26 @@
                     
                     xhr.open('GET', url, true);
                     xhr.onreadystatechange = function() {
-                        const response = JSON.parse(xhr.responseText);
-                        const state = response.State;
-                        const result = document.createElement('p');
-                        result.textContent = `Email: ${email}, State: ${state}`;
-                        resultsDiv.appendChild(result);
-
+                        if (xhr.readyState == 4) {
+                            if (xhr.status == 200) {
+                                try {
+                                    const response = JSON.parse(xhr.responseText);
+                                    const state = response.State;
+                                    const result = document.createElement('p');
+                                    result.textContent = `Email: ${email}, State: ${state}`;
+                                    resultsDiv.appendChild(result);
+                                } catch (e) {
+                                    console.error('Error parsing JSON:', e);
+                                    const errorResult = document.createElement('p');
+                                    errorResult.textContent = `Email: ${email}, Error parsing response`;
+                                    resultsDiv.appendChild(errorResult);
+                                }
+                            } else {
+                                const errorResult = document.createElement('p');
+                                errorResult.textContent = `Email: ${email}, HTTP Error: ${xhr.status}`;
+                                resultsDiv.appendChild(errorResult);
+                            }
+                        }
                     };
                     xhr.send();
                 }
