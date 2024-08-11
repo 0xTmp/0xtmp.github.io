@@ -29,6 +29,10 @@
         button:hover {
             background-color: #0056b3;
         }
+        #results p {
+            padding: 5px;
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
@@ -38,6 +42,7 @@
         <br>
         <button type="button" onclick="checkEmails()">Check Emails</button>
     </form>
+    <div id="results"></div> <!-- Div to display results -->
 
     <script>
         function checkEmail(email) {
@@ -49,12 +54,12 @@
             xhr.onload = function() {
                 if (xhr.status === 200) {
                     const data = JSON.parse(xhr.responseText);
-                    console.log(data); // Print the JSON response to the console
+                    const resultsDiv = document.getElementById('results');
 
                     if (parseInt(data.State) === 4) {
-                        console.log(`[\x1b[93m+\x1b[0m] Existing Account: ${email}`);
+                        resultsDiv.innerHTML += `<p>${email}: <span style="color: green;">Exists</span></p>`;
                     } else {
-                        console.log(`[-] No Account Found: ${email}`);
+                        resultsDiv.innerHTML += `<p>${email}: <span style="color: red;">Does not exist</span></p>`;
                     }
                 } else {
                     console.error(`Error fetching data for ${email}: ${xhr.status}`);
@@ -70,6 +75,8 @@
 
         function checkEmails() {
             const emails = document.getElementById('emails').value.split('\n').map(email => email.trim());
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = ''; // Clear previous results
 
             emails.forEach(email => {
                 if (email) { // Skip empty lines
