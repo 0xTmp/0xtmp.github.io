@@ -4,69 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email List State Checker</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        #emailForm {
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #aaa;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #007BFF;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        #results {
+            max-width: 400px;
+        }
+        p.error {
+            color: red;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
+    <h1>Email List State Checker</h1>
 
-    <div class="container mt-5">
-        <h1 class="text-center mb-4">Email List State Checker</h1>
+    <form id="emailForm">
+        <label for="emails">Enter email addresses (one per line):</label><br>
+        <textarea id="emails" rows="10" cols="30"></textarea><br>
+        <button type="submit">Check States</button>
+        <div id="loading" class="spinner" style="display:none;"></div>
+    </form>
 
-        <form id="emailForm" class="mb-4">
-            <div class="mb-3">
-                <label for="emails" class="form-label">Enter email addresses (one per line):</label>
-                <textarea id="emails" class="form-control" rows="10"></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Check States</button>
-        </form>
+    <h2>Results:</h2>
+    <div id="results"></div>
 
-        <h2 class="text-center">Results:</h2>
-        <div id="results" class="mt-3"></div>
-    </div>
-
-    <!-- Bootstrap JS (Optional) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.getElementById('emailForm').addEventListener('submit', function(event) {
             event.preventDefault();
-            const emails = document.getElementById('emails').value.split('\n');
+            const emails = document.getElementById('emails').value.split('\n').map(email => email.trim()).filter(email => email);
             const resultsDiv = document.getElementById('results');
+            const loading = document.getElementById('loading');
             resultsDiv.innerHTML = ''; // Clear previous results
+            loading.style.display = 'inline-block';
 
-            emails.forEach(email => {
-                email = email.trim();
-                if (email) {
+            const processEmail = (email) => {
+                return new Promise((resolve) => {
                     const xhr = new XMLHttpRequest();
                     const url = `https://corsproxy.io/?https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`;
                     
                     xhr.open('GET', url, true);
                     xhr.onreadystatechange = function() {
                         if (xhr.readyState === XMLHttpRequest.DONE) {
-                            const result = document.createElement('div');
-                            result.classList.add('alert');
-                            
                             if (xhr.status === 200) {
                                 try {
                                     const response = JSON.parse(xhr.responseText);
-                                    const state = response.State;
-                                    result.classList.add('alert-success');
-                                    result.textContent = `Email: ${email}, State: ${state}`;
+                                    const state = response.State || "Unknown";
+                                    resolve({ email, state });
                                 } catch (e) {
-                                    console.error('Error parsing JSON:', e);
-                                    result.classList.add('alert-warning');
-                                    result.textContent = `Email: ${email}, Error parsing response`;
+                                    resolve({ email, error: 'Error parsing response' });
                                 }
                             } else {
-                                result.classList.add('alert-danger');
-                                result.textContent = `Email: ${email}, HTTP Error: ${xhr.status}`;
+                                resolve({ email, error: `HTTP Error: ${xhr.status}` });
                             }
-
-                            resultsDiv.appendChild(result);
                         }
                     };
+                    xhr.onerror = function() {
+                        resolve({ email, error: 'Network Error' });
+                    };
                     xhr.send();
+                });
+            };
+
+            const displayResult = (result) => {
+                const resultParagraph = document.createElement('p');
+                if (result.error) {
+                    resultParagraph.textContent = `Email: ${result.email}, Error: ${result.error}`;
+                    resultParagraph.className = 'error';
+                } else {
+                    resultParagraph.textContent = `Email: ${result.email}, State: ${result.state}`;
                 }
-            });
+                resultsDiv.appendChild(resultParagraph);
+            };
+
+            const checkEmails = async () => {
+                for (const email of emails) {
+                    const result = await processEmail(email);
+                    displayResult(result);
+                }
+                loading.style.display = 'none';
+            };
+
+            checkEmails();
         });
     </script>
 </body>
