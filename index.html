@@ -55,15 +55,9 @@
                     const url = `https://login.microsoftonline.com/getuserrealm.srf?login=${encodeURIComponent(email)}`;
 
                     fetch(url)
-                        .then(response => {
-                            if (response.status === 200) {
-                                return response.json();
-                            } else {
-                                throw new Error(`Failed to fetch for ${email}`);
-                            }
-                        })
+                        .then(response => response.json())
                         .then(data => {
-                            if (data && data.State === 4) {
+                            if (data.State === 4) {
                                 resultsDiv.innerHTML += `<p>${email}: <span style="color: green;">Exists</span></p>`;
                             } else {
                                 resultsDiv.innerHTML += `<p>${email}: <span style="color: red;">Does not exist</span></p>`;
